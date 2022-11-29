@@ -16,9 +16,6 @@ class Bot:
         self._guild_tracker = GuildTracker(self._window)
 
     def run(self):
-        # Starts a thread which manages a queue of actions to be performed by the window
-        self._window.start()
-            
         # Configure log message subscriptions
         if get_config('buffing.enabled'):
             buff_manager = BuffManager(

@@ -4,7 +4,7 @@ import time
 import subprocess
 import platform
 
-if platform.system == 'Windows':
+if platform.system() == 'Windows':
     # only exists and is only needed on windows
     import win32gui
 
