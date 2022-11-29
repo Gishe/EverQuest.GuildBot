@@ -25,10 +25,14 @@ def get_files_from_directory(folder_path: str, file_ext: str) -> List[str]:
     return [f for f in listdir(folder_path) if isfile(join(folder_path, f)) and f.endswith(file_ext)]
 
 
-def read_yaml(file_path: str) -> dict:
-    with open(file_path, 'r') as file:
-        return yaml.safe_load(file)
-
+def read_yaml(file_path: str, expect_found=True) -> dict:
+    try:
+        with open(file_path, 'r') as file:
+            return yaml.safe_load(file)
+    except FileNotFoundError:
+        if expect_found:
+            raise
+        pass
 
 def get_latest_modified_file(path_regex: str):
     try:

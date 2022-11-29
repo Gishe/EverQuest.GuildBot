@@ -3,6 +3,7 @@ import re
 import time
 import subprocess
 import platform
+import traceback
 
 if platform.system() == 'Windows':
     # only exists and is only needed on windows
@@ -69,7 +70,12 @@ class EverQuestWindow(ABC):
                     f'Received an action of type {type(handler)}, rather than a function. The action will be ignored.',
                     flush=True)
                 continue
-            handler()
+
+            try:
+                handler()
+            except Exception as e:
+                print(f'Error occurred on Window thread.')
+                traceback.print_exc()
 
     def handle_window_action(self, action):
         self._queue.put(action)
