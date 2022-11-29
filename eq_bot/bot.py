@@ -11,7 +11,7 @@ TICK_INTERVAL = 1
 
 class Bot:
     def __init__(self):
-        self._window = EverQuestWindow()
+        self._window = EverQuestWindow.get_window()
         self._player_log_reader = self._window.get_player_log_reader()
         self._guild_tracker = GuildTracker(self._window)
 
