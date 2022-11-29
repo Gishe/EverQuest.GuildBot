@@ -82,7 +82,7 @@ class GuildTracker(Thread):
         dump_filename = f"{self._get_safe_guild_name()}-Dump-{dump_time_str}"
         self._eq_window.guild_dump(dump_filename)
         dump_filepath = f"{EVERQUEST_ROOT_FOLDER}\{dump_filename}.txt"
-        
+
         new_dump = parse_dump_file(dump_time, dump_filepath)
         new_dump.print()
 
@@ -99,9 +99,9 @@ class GuildTracker(Thread):
         return dump_differential
 
     # Run this as a daemon so the thread will be cleaned up if the process is destroyed
-    def start(self) -> None:
+    def run(self) -> None:
         while True:
-            self.update_status()
+            self._eq_window.handle_window_action(self.update_status)
             time.sleep(INTERVAL)
 
     def update_status(self):

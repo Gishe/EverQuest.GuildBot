@@ -3,7 +3,7 @@ from game.guild.entities.dkp_summary_differential import DkpSummaryDifferential
 from game.guild.dump_analyzer import DAYS_UNTIL_INACTIVE
 
 class DiscordStatusReportFormatter:
-    def build_output(self, dump_differential: GuildDumpDifferential, dkp_summary_differential: DkpSummaryDifferential) -> str:
+    def build_output(self, dump_differential: GuildDumpDifferential = None, dkp_summary_differential: DkpSummaryDifferential = None) -> str:
         if (not dump_differential or not dump_differential.has_differences) and \
             (not dkp_summary_differential or not dkp_summary_differential.has_differences):
             return

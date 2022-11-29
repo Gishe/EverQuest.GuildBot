@@ -7,6 +7,7 @@ from game.logging.entities.log_message import LogMessageType
 from game.buff.buff_manager import BuffManager
 from utils.config import get_config
 
+TICK_INTERVAL = 1
 
 class Bot:
     def __init__(self):
@@ -14,7 +15,7 @@ class Bot:
         self._player_log_reader = self._window.get_player_log_reader()
         self._guild_tracker = GuildTracker(self._window)
 
-    def start(self):
+    def run(self):
         # Starts a thread which manages a queue of actions to be performed by the window
         self._window.start()
             
@@ -34,3 +35,7 @@ class Bot:
 
         if get_config('guild_tracking.enabled'):
             self._guild_tracker.start()
+
+        # This thread is probably processing the signal handlers, so we need to let it run every so often
+        while True:
+            time.sleep(TICK_INTERVAL)

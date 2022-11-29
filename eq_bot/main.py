@@ -37,7 +37,7 @@ def on_crash(e: Exception):
 def main():
     try:
         on_start()
-        Bot().start()
+        Bot().run()
     except Exception as e:
         on_crash(e)
     finally:

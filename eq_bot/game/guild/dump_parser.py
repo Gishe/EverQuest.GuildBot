@@ -23,11 +23,11 @@ def parse_guild_member(dump_time: datetime, member_arr: List[str]) -> GuildMembe
         is_online=zone and len(zone) > 0
     )
 
-def parse_dump_file(dump_time: datetime, filepath: str) -> List[GuildMember]:
+def parse_dump_file(dump_time: datetime, filepath: str) -> GuildDump:
     member_entities = []
-    with open(filepath, newline = '') as guild_dump:
-    	members = csv.reader(guild_dump, delimiter='\t')
-    	for member in members:
+    with open(filepath, newline='') as guild_dump:
+        members = csv.reader(guild_dump, delimiter='\t')
+        for member in members:
             member_entities.append(parse_guild_member(dump_time, member))
-    		
+
     return GuildDump(members=member_entities, taken_at=dump_time)
