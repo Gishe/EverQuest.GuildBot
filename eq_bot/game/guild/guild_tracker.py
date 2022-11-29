@@ -9,33 +9,32 @@ from game.guild.dump_parser import parse_dump_file
 from game.guild.dump_analyzer import build_differential as build_dump_differential
 from game.guild.dkp_analyzer import build_differential as build_dkp_summary_differential
 from game.guild.formatter.discord_status_report_formatter import DiscordStatusReportFormatter
-from game.guild.dkp_gateway import DkpGateway
+from integrations.opendkp.opendkp import OpenDkp
 from integrations.discord import send_message, DiscordWebhookType
 from utils.file import move_file, make_directory, get_files_from_directory, read_json, write_json
 from utils.config import get_config
 from utils.array import contains
+from action_queue import enqueue_action
 
-# TODO: Move to configuration file
 DUMP_EXTENSION='.dump'
 DUMP_OUTPUT_FOLDER='output\\dumps\\guild'
 DUMP_TIME_FORMAT='%Y%m%d-%H%M%S'
 DKP_SUMMARY_OUTPUT_FOLDER='output\\dkp\\summary'
 DKP_SUMMARY_EXTENSION='.json'
+
 INTERVAL=get_config('guild_tracking.interval', 300)
-OUTPUT_TO_DISCORD=get_config('guild_tracking.output_to_discord')
-IN_GAME_DUMP_ENABLED=get_config('guild_tracking.in_game_dump.enabled')
-DKP_SUMMARY_ENABLED=get_config('guild_tracking.open_dkp.enabled')
+DISCORD_EVENTS=get_config('guild_tracking.discord_output.events', [])
 
 class GuildTracker(Thread):
-    def __init__(self, eq_window: EverQuestWindow, daemon: bool = True):
+    def __init__(self, eq_window: EverQuestWindow, opendkp: OpenDkp, daemon: bool = True):
         super().__init__(daemon=daemon)
         make_directory(DUMP_OUTPUT_FOLDER)
         make_directory(DKP_SUMMARY_OUTPUT_FOLDER)
         self._eq_window = eq_window
-        self._last_dump = self._lookup_most_recent_dump() if IN_GAME_DUMP_ENABLED else None
-        self._last_dkp_summary = self._lookup_most_recent_dkp_summary() if DKP_SUMMARY_ENABLED else None
+        self._opendkp = opendkp
+        self._last_dump = self._lookup_most_recent_dump()
+        self._last_dkp_summary = self._lookup_most_recent_dkp_summary()
         self._discord_formatter = DiscordStatusReportFormatter()
-        self._dkp_gateway = DkpGateway()
 
     def _get_safe_guild_name(self):
         return self._eq_window.player.guild.replace(' ', '-')
@@ -60,7 +59,7 @@ class GuildTracker(Thread):
 
     def _create_dkp_summary(self):
         dkp_summary_time = datetime.now()
-        new_dkp_summary = self._dkp_gateway.fetch_dkp_summary()
+        new_dkp_summary = self._opendkp.get_dkp_summary()
 
         dkp_summary_differential = None
         if self._last_dkp_summary:
@@ -101,20 +100,23 @@ class GuildTracker(Thread):
     # Run this as a daemon so the thread will be cleaned up if the process is destroyed
     def run(self) -> None:
         while True:
-            self._eq_window.handle_window_action(self.update_status)
+            enqueue_action(self.update_status)
             time.sleep(INTERVAL)
 
     def update_status(self):
         dump_differential = None
         dkp_summary_differential = None
 
-        if IN_GAME_DUMP_ENABLED:
-            dump_differential = self._create_dump()
+        # Always take a dump of guild members so that
+        # other services can fetch the current roster
+        dump_differential = self._create_dump()
 
-        if DKP_SUMMARY_ENABLED:
+        if 'OPENDKP_OFF_DUTY' in DISCORD_EVENTS:
             dkp_summary_differential = self._create_dkp_summary()
-        
-        if OUTPUT_TO_DISCORD:
+
+        # TODO: Leverage "guild_tracking.track_events" array to
+        # determine exactly what should be tracked/sent to discord.
+        if len(DISCORD_EVENTS) > 0:
             message = self._discord_formatter.build_output(
                 dump_differential,
                 dkp_summary_differential)

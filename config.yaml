@@ -1,24 +1,38 @@
 player:
   autodetect: true
+
 log_parsing:
   enabled: true
   cycle_on_start: false
+
 guild_tracking:
   enabled: true
-  output_to_discord: false
+  # discord_output:
+  #   events:
+  #     - JOIN_GUILD
+  #     - LEAVE_GUILD
+  #     - OPENDKP_OFF_DUTY
   interval: 300
-  in_game_dump:
-    enabled: true
-    days_until_inactive: 30
-  open_dkp:
-    enabled: true
-    client_id: 6192bc2cf4680
-    root_endpoint: https://7gnjtigho4.execute-api.us-east-2.amazonaws.com/beta
-    off_duty_metric:
+  opendkp_metrics:
+    off_duty:
       key: calculated_30
       threshold: .40
+
+opendkp:
+  host: fanotest.opendkp.com
+  aws_region: us-east-2
+  public_endpoint: https://7gnjtigho4.execute-api.us-east-2.amazonaws.com/beta
+  identity_endpoint: https://4jmtrkwc86.execute-api.us-east-2.amazonaws.com/beta
+  secure_endpoint: https://orgl2496uk.execute-api.us-east-2.amazonaws.com/beta
+
+dkp:
+  bidding:
+    enabled: true
+    restrict_to_guildies: false
+
 game:
   root_folder: C:\Program Files (x86)\Steam\steamapps\common\Everquest F2P
+
 buffing:
   enabled: true
   restrict_to_guildies: true
@@ -29,6 +43,7 @@ buffing:
     Hastening of Salik:
       spell_slot: 7
       cast_time: 9
+
 monitoring:
   notifications:
     notify_on_start: false

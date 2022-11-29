@@ -3,15 +3,12 @@ import re
 import time
 import subprocess
 import platform
-import traceback
 
 if platform.system() == 'Windows':
     # only exists and is only needed on windows
     import win32gui
 
 from abc import ABC, abstractmethod
-from queue import Queue
-from threading import Thread
 
 from pynput.keyboard import Key
 from dataclasses import dataclass
@@ -31,9 +28,7 @@ EVERQUEST_LOG_FOLDER = os.path.join(EVERQUEST_ROOT_FOLDER, 'Logs')
 
 class EverQuestWindow(ABC):
 
-    def __init__(self, daemon: bool = True):
-        self._queue = Queue()
-
+    def __init__(self):
         self.player = CurrentPlayer(
             name=get_config('player.name'),
             server=get_config('player.server'),
@@ -44,10 +39,6 @@ class EverQuestWindow(ABC):
                 self._lookup_current_player()
             if not self.player.guild:
                 self._lookup_current_guild()
-
-        # Making the creation of the thread be the last thing that happens
-        # so that the rest of initialization is done before it starts
-        self._thread = Thread(target=self.run, daemon=daemon).start()
 
     @staticmethod
     def get_window(*args, **kwargs):
@@ -61,25 +52,6 @@ class EverQuestWindow(ABC):
         }.get(platform.system(), EverQuestWindow)
         return window_class(*args, **kwargs)
 
-    # Run this as a daemon so the thread will be cleaned up if the process is destroyed
-    def run(self) -> None:
-        while True:
-            handler = self._queue.get(block=True)
-            if not callable(handler):
-                print(
-                    f'Received an action of type {type(handler)}, rather than a function. The action will be ignored.',
-                    flush=True)
-                continue
-
-            try:
-                handler()
-            except Exception as e:
-                print(f'Error occurred on Window thread.')
-                traceback.print_exc()
-
-    def handle_window_action(self, action):
-        self._queue.put(action)
-
     @abstractmethod
     def activate(self):
         pass
@@ -89,12 +61,15 @@ class EverQuestWindow(ABC):
         send_key(Key.enter)
 
     def send_chat_message(self, message):
+        self.activate()
         self.clear_chat()
         send_text(message)
         send_key(Key.enter)
+    
+    def send_tell_message(self, to_player, message):
+        self.send_chat_message(f'/tell {to_player} {message}')
 
     def guild_dump(self, outputfile):
-        self.activate()
         return self.send_chat_message(f"/outputfile guild {outputfile}")
 
     def get_player_log_reader(self):
@@ -138,7 +113,6 @@ class EverQuestWindow(ABC):
             LogMessageType.GUILD_STAT,
             self._update_current_guild)
 
-        self.activate()
         self.send_chat_message(f"/target {self.player.name}")
         self.send_chat_message(f"/guildstat")
         log_reader.process_new_messages()

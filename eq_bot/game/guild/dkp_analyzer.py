@@ -6,8 +6,8 @@ from game.guild.entities.dkp_summary_differential import DkpSummaryDifferential
 from utils.config import get_config
 
 
-OFF_DUTY_METRIC_KEY=get_config('guild_tracking.open_dkp.off_duty_metric.key')
-OFF_DUTY_METRIC_THRESHOLD=get_config('guild_tracking.open_dkp.off_duty_metric.threshold')
+OFF_DUTY_METRIC_KEY=get_config('guild_tracking.opendkp_metrics.off_duty.key')
+OFF_DUTY_METRIC_THRESHOLD=get_config('guild_tracking.opendkp_metrics.off_duty.threshold')
 
 
 def build_differential(from_summary: DkpSummary, to_summary: DkpSummary) -> DkpSummaryDifferential:
