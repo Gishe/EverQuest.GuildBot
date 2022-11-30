@@ -93,12 +93,12 @@ class BiddingManager:
                     bid_message.amount,
                     bid_message.is_box_bid,
                     bid_message.is_alt_bid)
+                print(f'{bid_message.from_player} has bid {bid_message.amount} on {bid_message.item}')
             except KeyError:
+                print(f'{bid_message.from_player} tried to bid {bid_message.amount} on {bid_message.item}, but the item is not in the round.')
                 self._eq_window.send_tell_message(
                     bid_message.from_player,
                     f'{bid_message.item} is not being bid on. Did you spell the name correctly?')
-
-            print(f'{bid_message.from_player} has bid {bid_message.amount} on {bid_message.item}')
 
         if bid_message.message_type == BidMessageType.BEGIN_RAID:
             # TODO: Restrict to officers in guild only

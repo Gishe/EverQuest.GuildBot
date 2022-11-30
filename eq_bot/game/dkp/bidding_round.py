@@ -77,71 +77,13 @@ class BiddingRound:
                 is_box_bid = is_box_bid,
                 is_alt_bid = is_alt_bid
             ))
+            print(biddable_item.bids)
 
     def end_round(self) -> List[BidResult]:
         round_results = []
+
         for item in self._items:
-            if len(item.bids) == 0:
-                round_results.append(BidResult(item=item.name))
-                break
-
-            remaining_bids = sorted(item.bids, key = lambda i: i.amount, reverse = True)
-
-            # TODO: Handle alt/box logic
-            # - Alt bids should never win over a "non" alt bid
-            # - Box bids are for 2x the amount of "non" box bids
-
-            remaining_item_count = item.count
-            while remaining_item_count > 0 and len(remaining_bids) > 0:
-                top_bid_amount = remaining_bids[0].amount
-                tied_bids = list(filter(lambda b: (b.amount == top_bid_amount), item.bids))
-
-                tied_bids_count = len(tied_bids)
-
-                if tied_bids_count > 1:
-
-                    # Get the win amount using the next highest bidder who is not part of the tie
-                    win_amount = remaining_bids[tied_bids_count].amount + 1 \
-                        if len(remaining_bids) > tied_bids_count else 1
-
-                    # Are there an equal amount or more items available than the number of bidders
-                    if tied_bids_count <= remaining_item_count:
-
-                        round_results.extend([
-                            BidResult(
-                                winner=bid.from_player,
-                                item=item.name,
-                                amount=win_amount
-                            ) for bid in tied_bids
-                        ])
-
-                        remaining_item_count -= tied_bids_count
-                        remaining_bids = remaining_bids[tied_bids_count:]
-                    else:
-                        round_results.append(BidResult(
-                            tied_players=[ bid.from_player for bid in tied_bids ],
-                            item=item.name,
-                            amount=win_amount
-                        ))
-                        remaining_item_count = 0
-                        break
-                else:
-                   # Get the win amount using the next highest bidder
-                    win_amount = remaining_bids[1].amount + 1 \
-                        if len(remaining_bids) > 1 else 1
-
-                    round_results.append(BidResult(
-                        winner=remaining_bids[0].from_player,
-                        item=item.name,
-                        amount=win_amount
-                    ))
-
-                    remaining_item_count -= 1
-                    remaining_bids = remaining_bids[1:]
-
-            if remaining_item_count > 0:
-                round_results.append(BidResult(item=item.name))
-                pass
+            round_results.extend(item.resolve_bids())
 
         # End the round, preventing new bids from being accepted
         self.reset()

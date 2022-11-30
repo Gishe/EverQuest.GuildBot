@@ -5,7 +5,7 @@ from utils.config import get_config
 from pynput.keyboard import Key, Controller
 
 MIN_MESSAGE_DELAY = get_config('general.output.min_message_delay', .75)
-MAX_MESSAGE_DELAY = get_config('general.output.max_message_delay', 1.25)
+MAX_MESSAGE_DELAY = get_config('general.output.max_message_delay', 1)
 MIN_KEY_DELAY = get_config('general.output.min_key_delay', .1)
 MAX_KEY_DELAY = get_config('general.output.max_key_delay', .225)
 

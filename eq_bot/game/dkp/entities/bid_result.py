@@ -12,7 +12,7 @@ class BidResult:
         if self.tied_players:
             return [
                 f'The following players are tied at {self.amount} DKP for the {self.item}: {", ".join(self.tied_players)}',
-                f'Please provide your 30 day RA and lifetime ticks to the loot officer to determine tiebreaks.'
+                f'Please provide your 30 day RA and lifetime ticks to the loot officer for tiebreaks.'
             ]
 
         if not self.winner:
@@ -21,5 +21,7 @@ class BidResult:
             ]
 
         return [
-            f'{self.item} ; {self.amount} ; {self.winner} grats'
+            # Until we automate the integration with pushing wins to opendkp directly,
+            # we need to include the "gratss" typo
+            f'{self.item} ; {self.amount} ; {self.winner} gratss'
         ]
