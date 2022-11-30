@@ -10,6 +10,7 @@ from game.buff.buff_manager import BuffManager
 from game.dkp.bidding_manager import BiddingManager
 from integrations.opendkp.opendkp import OpenDkp
 from utils.config import get_config
+import logging
 
 TICK_INTERVAL = 1
 
@@ -21,6 +22,12 @@ class Bot:
         self._guild_tracker = GuildTracker(
             self._window,
             self._opendkp)
+        log_level = get_config('logging.level', 'DEBUG')
+        numeric_level = getattr(logging, log_level, None)
+        if not isinstance(numeric_level, int):
+            logging.basicConfig(filename=get_config('logging.file_name', "eq_bot.log"), level=numeric_level)
+        else:
+            raise ValueError('Invalid log level: %s' % log_level)
 
     def run(self):
         # Configure DKP Bidding Manager

@@ -7,6 +7,7 @@ from game.dkp.entities.bid_message import BidMessageType
 from game.dkp.bidding_round import BiddingRound
 from integrations.opendkp.opendkp import OpenDkp
 from action_queue import enqueue_action
+import logging
 
 RESTRICT_TO_GUILDIES = get_config('dkp.bidding.restrict_to_guildies', True)
 
@@ -23,7 +24,7 @@ class BiddingManager:
         if bid_message.message_type == BidMessageType.ENQUEUE_BID_ITEMS:
             # TODO: Restrict to officers in guild only
             if len(bid_message.items) == 0:
-                print('Received enqueue bid message, but no items were enqueued.')
+                logging.info('Received enqueue bid message, but no items were enqueued.')
                 self._eq_window.send_tell_message(
                     bid_message.from_player,
                     'You must provide a list of items to enqueue, separated by ";"')
@@ -31,19 +32,19 @@ class BiddingManager:
 
             self._bidding_round.enqueue_items(bid_message.items)
 
-            print(f'{bid_message.from_player} has enqueued the following items: {bid_message.items}')
+            logging.info(f'{bid_message.from_player} has enqueued the following items: {bid_message.items}')
 
         if bid_message.message_type == BidMessageType.START_ROUND:
             # TODO: Restrict to officers in guild only
             if self._bidding_round.is_enabled():
-                print(f'{bid_message.from_player} attempted to start a round of bidding, but a round is currently active.')
+                logging.warn(f'{bid_message.from_player} attempted to start a round of bidding, but a round is currently active.')
                 self._eq_window.send_tell_message(
                     bid_message.from_player,
                     'A round of bidding is already active. You cannot start a new round.')
                 return
 
             if not self._bidding_round.has_items():
-                print(f'{bid_message.from_player} attempted to start a round of bidding, but no items are in the next round.')
+                logging.warn(f'{bid_message.from_player} attempted to start a round of bidding, but no items are in the next round.')
                 self._eq_window.send_tell_message(
                     bid_message.from_player,
                     'No items are currently queued for bidding. The round has not been started.')
@@ -59,7 +60,7 @@ class BiddingManager:
         if bid_message.message_type == BidMessageType.END_ROUND:
             # TODO: Restrict to officers in guild only
             if not self._bidding_round.is_enabled():
-                print(f'{bid_message.from_player} attempted to end a round of bidding, but a round is not active.')
+                logging.warn(f'{bid_message.from_player} attempted to end a round of bidding, but a round is not active.')
                 self._eq_window.send_tell_message(
                     bid_message.from_player,
                     'There is not a round of bidding currently active.')
@@ -80,7 +81,7 @@ class BiddingManager:
 
         if bid_message.message_type == BidMessageType.BID_ON_ITEM:
             if not self._bidding_round.is_enabled():
-                print(f'{bid_message.from_player} attempted to bid on {bid_message.item} for {bid_message.amount} dkp, but a round is not active.')
+                logging.info(f'{bid_message.from_player} attempted to bid on {bid_message.item} for {bid_message.amount} dkp, but a round is not active.')
                 self._eq_window.send_tell_message(
                     bid_message.from_player,
                     'There is not a round of bidding currently active.')
@@ -93,9 +94,9 @@ class BiddingManager:
                     bid_message.amount,
                     bid_message.is_box_bid,
                     bid_message.is_alt_bid)
-                print(f'{bid_message.from_player} has bid {bid_message.amount} on {bid_message.item}')
+                logging.info(f'{bid_message.from_player} has bid {bid_message.amount} on {bid_message.item}')
             except KeyError:
-                print(f'{bid_message.from_player} tried to bid {bid_message.amount} on {bid_message.item}, but the item is not in the round.')
+                logging.warn(f'{bid_message.from_player} tried to bid {bid_message.amount} on {bid_message.item}, but the item is not in the round.')
                 self._eq_window.send_tell_message(
                     bid_message.from_player,
                     f'{bid_message.item} is not being bid on. Did you spell the name correctly?')
@@ -117,7 +118,7 @@ class BiddingManager:
     def handle_tell_message(self, tell_message):
         # Do not proceed if restrict to guildies enabled and is not a guild member
         if RESTRICT_TO_GUILDIES and not self._guild_tracker.is_a_member(tell_message.from_character):
-            # TODO: Log a warning
+            logging.warn(f'{tell_message.from_character} has sent a tell with {tell_message.inner_message} and is not registered as a guild member')
             return
 
         # Should we move this logic upstream and subscribe to bid messages only?

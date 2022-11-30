@@ -49,3 +49,8 @@ monitoring:
     notify_on_start: false
     notify_on_stop: false
     notify_on_crash: false
+
+logging:
+  level: debug
+  file_name: "eq_bot.log"
+
