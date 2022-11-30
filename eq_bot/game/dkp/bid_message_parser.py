@@ -7,7 +7,6 @@ from game.dkp.entities.bid_message import BidMessage, EnqueueBidItemsMessage, \
 ENQUEUE_ITEMS_CMD = '#enqueue-items'
 START_ROUND_CMD = '#start-round'
 END_ROUND_CMD = '#end-round'
-ITEM_BID_CMD = '#bid'
 BEGIN_RAID_CMD = '#begin-raid'
 
 def parse_bid_message(tell_message: LogMessage):
@@ -40,29 +39,6 @@ def parse_bid_message(tell_message: LogMessage):
             full_message = tell_message.inner_message,
             from_player = tell_message.from_character
         )
-    if tell_message.inner_message.startswith(ITEM_BID_CMD):
-        bid_parts = tell_message.inner_message.lstrip(ITEM_BID_CMD).split(':')
-
-        if len(bid_parts) != 2:
-            # TODO: Raise an exception / send message back to player
-            return
-
-        bid_attributes = bid_parts[1].strip().split(' ')
-
-        amount_str = bid_attributes[0].strip() 
-        if not amount_str or not amount_str.isnumeric():
-            # TODO: Raise an exception / send message back to player
-            return
-
-        return BidOnItemMessage(
-            timestamp = tell_message.timestamp,
-            full_message = tell_message.inner_message,
-            from_player = tell_message.from_character,
-            item = bid_parts[0].strip(),
-            amount = int(amount_str),
-            is_box_bid = 'box' in bid_attributes,
-            is_alt_bid = 'alt' in bid_attributes
-        )
     if tell_message.inner_message.startswith(BEGIN_RAID_CMD):
         raid_name = tell_message.inner_message.lstrip(BEGIN_RAID_CMD).strip()
         if not raid_name:
@@ -75,5 +51,26 @@ def parse_bid_message(tell_message: LogMessage):
             from_player = tell_message.from_character,
             raid_name = raid_name
         )
+    
+    bid_parts = tell_message.inner_message.split(':')
 
-    return None
+    if len(bid_parts) != 2:
+        # TODO: Raise an exception / send message back to player
+        return
+
+    bid_attributes = bid_parts[1].strip().split(' ')
+
+    amount_str = bid_attributes[0].strip() 
+    if not amount_str or not amount_str.isnumeric():
+        # TODO: Raise an exception / send message back to player
+        return
+        
+    return BidOnItemMessage(
+        timestamp = tell_message.timestamp,
+        full_message = tell_message.inner_message,
+        from_player = tell_message.from_character,
+        item = bid_parts[0].strip(),
+        amount = int(amount_str),
+        is_box_bid = 'box' in bid_attributes,
+        is_alt_bid = 'alt' in bid_attributes
+    )
